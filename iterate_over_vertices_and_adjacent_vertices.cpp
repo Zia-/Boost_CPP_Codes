@@ -16,14 +16,17 @@ using namespace std;
 
 /*The purpose of typedef is to form complex types from more-basic machine types[1]
 and assign simpler names to such combinations.*/
-typedef boost::adjacency_list<listS, vecS, directedS> mygraph;
+typedef property<edge_weight_t, int> EdgeWeightProperty;
+typedef boost::adjacency_list<listS, vecS, directedS, no_property, EdgeWeightProperty> mygraph;
 
 int main(){
 	mygraph g;
-	add_edge (0,1,g);
-	add_edge (0,3,g);
-	add_edge (1,2,g);
-	add_edge (2,3,g);
+	add_edge (0, 1, 8, g);
+    add_edge (0, 3, 18, g);
+    add_edge (1, 2, 20, g);
+    add_edge (2, 3, 2, g);
+    add_edge (3, 1, 1, g);
+	add_edge (1, 3, 7, g);
 
 	//Here we are creating pointers which will refer to the indexes of the graph
 	mygraph::vertex_iterator vertexIt, vertexEnd;
