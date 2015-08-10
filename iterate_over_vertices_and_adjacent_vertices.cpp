@@ -6,15 +6,17 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
+//#include is to add files having f()s which we may need here
 #include <iostream>
 #include <boost/graph/adjacency_list.hpp>
 
+//namespace is a dictionary which contains the def of terms used in our code eg cout, int, float etc
 using namespace boost;
 using namespace std;
 
 /*The purpose of typedef is to form complex types from more-basic machine types[1]
 and assign simpler names to such combinations.*/
-typedef boost::adjacency_list<listS, vecS, undirectedS> mygraph;
+typedef boost::adjacency_list<listS, vecS, directedS> mygraph;
 
 int main(){
 	mygraph g;
@@ -41,6 +43,7 @@ int main(){
 
 		for(; neighbourIt != neighbourEnd; ++neighbourIt)
 			cout << *neighbourIt << " ";
+
 		cout << "vertices \n";
 	}
 }
