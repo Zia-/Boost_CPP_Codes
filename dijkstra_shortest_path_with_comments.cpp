@@ -34,7 +34,8 @@ int main(int, char *[])
 	listS argument means that the edges will be stored in the list containers.
 	vecS means the graph will be based on the vector container.
 	no_property means vertices have no property.
-	property < edge_weight_t, int > means that edges will have property. We are using template. edge_weight_t is a defined term.*/
+	property < edge_weight_t, int > means that edges will have property. We are using template. edge_weight_t is a defined term.
+To make the graph undirected just rename directedS to undirectedS and it will work fine.*/
   typedef adjacency_list < listS, vecS, directedS, no_property, property < edge_weight_t, int > > graph_t;
 /*  we are using graph_traits class template to make an object of its vertex_descriptor type and giving it some proper name.
  * we are passing adjacency_list object which we just defined above to it as template parameter. */
