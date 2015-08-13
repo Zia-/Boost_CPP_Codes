@@ -5,6 +5,7 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/property_map/property_map.hpp>
+#include <boost/graph/astar_search.hpp>
 
 /*
 
@@ -15,6 +16,7 @@ To be able to distinguish the edges (source,target) from the (target,source)
 */
 using namespace boost;
 
+//----------------------------------------------------------------------------------------------
 // FIRST SCENARIO (use this fig as a reference https://github.com/Zia-/Boost_CPP_Codes/issues/1)
 template < typename DirectedGraph >
 void simulation_undirected_in_directed_graph()
@@ -168,6 +170,7 @@ void simulation_undirected_in_directed_graph()
 
 }
 
+//----------------------------------------------------------------------------------------------
 // SECOND SCENARIO (use this fig as a reference https://github.com/Zia-/Boost_CPP_Codes/issues/1)
 template < typename DirectedGraph >
 void directed_graph_demo()
@@ -263,6 +266,7 @@ void directed_graph_demo()
 
 }
 
+//----------------------------------------------------------------------------------------------
 // THIRD SCENARIO (use this fig as a reference https://github.com/Zia-/Boost_CPP_Codes/issues/1)
 template < typename UndirectedGraph >
 void undirected_graph_demo()
@@ -342,6 +346,7 @@ void undirected_graph_demo()
 
 }
 
+//----------------------------------------------------------------------------------------------
 //ZIA PART - dijkstrea_shortest_path for undirected graph
 template < typename UndirectedGraph >
 void undirected_graph_dijkstra_shortest_path()
@@ -433,6 +438,7 @@ void undirected_graph_dijkstra_shortest_path()
   std::cout << std::endl;
 }
 
+//----------------------------------------------------------------------------------------------
 //ZIA PART - dijkstrea_shortest_path for directed graph
 template < typename DirectedGraph >
 void directed_graph_dijkstra_shortest_path()
@@ -527,6 +533,162 @@ void directed_graph_dijkstra_shortest_path()
   std::cout << std::endl;
 }
 
+//----------------------------------------------------------------------------------------------
+//ZIA PART - aStar_shortest_path for undirected graph
+//We need this struct to store our coordinates whic we are gonna use inside astar algo
+struct location
+{
+  float y, x; // lat, long
+};
+//Cost data type will be passed inside astar algo
+typedef float cost;
+// euclidean distance heuristic
+/*This is the most imp template as this will assist aStar algo
+to keep itself directed towards the target node by exploiting
+the coordinate values of each node within the graph*/
+template <class Graph, class CostType, class LocMap>
+class distance_heuristic : public astar_heuristic<Graph, CostType>
+{
+public:
+  typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
+  distance_heuristic(LocMap l, Vertex goal)
+  : m_location(l), m_goal(goal) {}
+  CostType operator()(Vertex u)
+  {
+  CostType dx = m_location[m_goal].x - m_location[u].x;
+  CostType dy = m_location[m_goal].y - m_location[u].y;
+  return ::sqrt(dx * dx + dy * dy);
+  }
+private:
+  LocMap m_location;
+  Vertex m_goal;
+};
+// visitor that terminates when we find the goal
+/*This visitor will be called after each iteration. If the
+next new node is equal to the target node then the value of that
+new node will be printed out*/
+template <class Vertex>
+class astar_goal_visitor : public boost::default_astar_visitor
+{
+public:
+  astar_goal_visitor(Vertex t) : m_goal(t) {}
+  template <class Graph>
+  void examine_vertex(Vertex u, Graph& undigraph) {
+  if(u == m_goal)
+    std::cout<< u << std::endl;
+  }
+private:
+  Vertex m_goal;
+};
+//Actual template we are gonna use inside the main
+template < typename UndirectedGraph >
+void undirected_graph_astar_shortest_path()
+{
+  const int V = 3;
+  UndirectedGraph undigraph(V);
+  //When using typedef then we are giving the whole definition of the data type a new name
+  typedef typename graph_traits < UndirectedGraph >::vertex_descriptor verdis;
+  //Now we are using this new name to make our object.
+  verdis vd;
+  typedef typename UndirectedGraph::edge_property_type Weight;
+  typename property_map < UndirectedGraph, edge_weight_t >::type
+    weight = get(edge_weight, undigraph);
+  //We have to use typename whenever wanna use during another template initiation or for typedef
+  typename graph_traits < UndirectedGraph >::out_edge_iterator out, out_end;
+  typename graph_traits < UndirectedGraph >::edge_iterator e, ei;
+  typename graph_traits < UndirectedGraph >::vertex_iterator vi, vend;
+
+  std::deque< typename graph_traits < UndirectedGraph >::vertex_descriptor > vert;
+  std::cout << "ASTAR SHORTEST PATH UNDIRECTED GRAPH DEMO\n";
+  std::cout << "Starting node is 1 and terminal is 12\n";
+
+  for (int i=0; i < 19; ++i) {
+    vd = vertex(i, undigraph);
+    vert.push_back(vd);
+  }
+
+  // the "cost" column
+  add_edge(vert[1],  vert[2],  Weight(1), undigraph); // id 1
+  // id 2 has -1
+  // id 3 has -1
+  add_edge(vert[2],  vert[5],  Weight(1), undigraph); // id 4
+  add_edge(vert[3],  vert[6],  Weight(1), undigraph); // id 5
+  add_edge(vert[7],  vert[8],  Weight(1), undigraph); // id 6
+  add_edge(vert[8],  vert[5],  Weight(1), undigraph); // id 7
+  add_edge(vert[5],  vert[6],  Weight(1), undigraph); // id 8
+  add_edge(vert[6],  vert[9],  Weight(1), undigraph); // id 9
+  add_edge(vert[5],  vert[10], Weight(1), undigraph); // id 10
+  add_edge(vert[6],  vert[11], Weight(1), undigraph); // id 11
+  add_edge(vert[10], vert[11], Weight(1), undigraph); // id 12
+  add_edge(vert[11], vert[12], Weight(1), undigraph); // id 13
+  add_edge(vert[10], vert[13], Weight(1), undigraph); // id 14
+  add_edge(vert[9],  vert[12], Weight(1), undigraph); // id 15
+  add_edge(vert[4],  vert[9],  Weight(1), undigraph); // id 16
+  add_edge(vert[14], vert[15], Weight(1), undigraph); // id 17
+  add_edge(vert[16], vert[17], Weight(1), undigraph); // id 18
+
+  // the "reverse_cost" column
+  add_edge(vert[2],  vert[1], Weight(2), undigraph); // id 1
+  add_edge(vert[3],  vert[2], Weight(2), undigraph); // id 2
+  add_edge(vert[4],  vert[3], Weight(2), undigraph); // id 3
+  add_edge(vert[5],  vert[2], Weight(2), undigraph); // id 4
+  // id 5 has -1
+  add_edge(vert[8],  vert[7], Weight(2), undigraph); // id 6
+  add_edge(vert[5],  vert[8], Weight(2), undigraph); // id 7
+  add_edge(vert[6],  vert[5], Weight(2), undigraph); // id 8
+  add_edge(vert[9],  vert[6], Weight(2), undigraph); // id 9
+  add_edge(vert[10], vert[5], Weight(2), undigraph); // id 10
+  // id 11 has -1
+  // id 12 has -1
+  // id 13 has -1
+  add_edge(vert[13], vert[10], Weight(2), undigraph); // id 14
+  add_edge(vert[12], vert[9],  Weight(2), undigraph); // id 15
+  add_edge(vert[9],  vert[4],  Weight(2), undigraph); // id 16
+  add_edge(vert[15], vert[14], Weight(2), undigraph); // id 17
+  add_edge(vert[17], vert[16], Weight(2), undigraph); // id 18
+
+  location locations[] = { // lat/long
+          {42.73, 73.68}, {44.28, 73.99}, {44.70, 73.46},
+          {44.93, 74.89}, {43.97, 75.91}, {43.10, 75.23},
+          {43.04, 76.14}, {43.17, 77.61}, {42.89, 78.86},
+          {42.44, 76.50}, {42.10, 75.91}, {42.04, 74.11},
+          {40.67, 73.94}, {45.28, 73.99}, {44.70, 74.46},
+      {41.67, 73.94}, {44.28, 72.99}
+    };
+
+/*
+#if 0
+  std::cout << "all edges:\n";
+  for (ei = edges(digraph).first; ei!=edges(digraph).second; ++ei)
+    std::cout << ' ' << *ei << get(weight, *ei) <<  std::endl;
+  std::cout << std::endl;
+#endif
+*/
+
+  std::vector<verdis> p(num_vertices(undigraph));
+  std::vector<int> d(num_vertices(undigraph));
+  //Here we are declaring the source and target node
+  verdis s = vertex(1, undigraph);
+  verdis t = vertex(12, undigraph);
+
+  //We need this array data type to record the distance value from the source to the target node
+  typename boost::graph_traits< UndirectedGraph >::vertices_size_type distances[17];
+
+  //aStar algo
+  /*Here we can use two kind of visitors (one has been commented out).
+  One will print the target node value. The other one will print out the
+  sum of distance value between source and target (although dont know how to print).*/
+  astar_search_tree
+          (undigraph, s,
+            distance_heuristic<UndirectedGraph, cost, location*>
+            (locations, t),
+           predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, undigraph))).
+           distance_map(make_iterator_property_map(d.begin(), get(vertex_index, undigraph))).
+           visitor(astar_goal_visitor<verdis>(t)));
+       //visitor(make_astar_visitor(record_distances(distances,on_tree_edge()))));
+
+}
+
 int main()
 {
   typedef property < edge_weight_t, double >Weight;
@@ -538,7 +700,8 @@ int main()
   //undirected_graph_demo < UndirectedGraph > ();
   //directed_graph_demo < DirectedGraph > ();
   //simulation_undirected_in_directed_graph < DirectedGraph > ();
-  undirected_graph_dijkstra_shortest_path < UndirectedGraph > ();
-  directed_graph_dijkstra_shortest_path < DirectedGraph > ();
+  //undirected_graph_dijkstra_shortest_path < UndirectedGraph > ();
+  //directed_graph_dijkstra_shortest_path < DirectedGraph > ();
+  undirected_graph_astar_shortest_path < UndirectedGraph > ();
   return 0;
 }
